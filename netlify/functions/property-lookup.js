@@ -2,7 +2,7 @@
 const https = require('https');
 
 // RentCast API configuration
-const RENTCAST_API_KEY = 'Bd22259f5a0948e0bf057c92e59315e3';
+const RENTCAST_API_KEY = 'process.env.REALTY_MOLE_API_KEY
 const RENTCAST_BASE_URL = 'https://api.rentcast.io/v1';
 
 // Cleaning quote calculation logic
