@@ -1,0 +1,149 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cleaning Quote Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #34495e;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        input[type="text"]:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            display: none;
+        }
+        .loading {
+            text-align: center;
+            color: #7f8c8d;
+        }
+        .error {
+            color: #e74c3c;
+            background-color: #fadbd8;
+        }
+        .success {
+            color: #27ae60;
+            background-color: #d5f4e6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏠 Cleaning Quote Calculator</h1>
+        <form id="quoteForm">
+            <div class="form-group">
+                <label for="address">Property Address:</label>
+                <input type="text" id="address" name="address" placeholder="Enter full address (e.g., 123 Main St, City, State, ZIP)" required>
+            </div>
+            <button type="submit">Get Cleaning Quote</button>
+        </form>
+        
+        <div id="result" class="result">
+            <div id="resultContent"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('quoteForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const address = document.getElementById('address').value;
+            const resultDiv = document.getElementById('result');
+            const resultContent = document.getElementById('resultContent');
+            
+            // Show loading state
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultContent.innerHTML = '🔍 Looking up property details...';
+            
+            try {
+                const response = await fetch('/.netlify/functions/property-lookup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ address: address })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultContent.innerHTML = `
+                        <h3>Property Details & Quote</h3>
+                        <p><strong>Address:</strong> ${data.property.address}</p>
+                        <p><strong>Square Footage:</strong> ${data.property.squareFootage || 'N/A'} sq ft</p>
+                        <p><strong>Bedrooms:</strong> ${data.property.bedrooms || 'N/A'}</p>
+                        <p><strong>Bathrooms:</strong> ${data.property.bathrooms || 'N/A'}</p>
+                        <hr>
+                        <h3>💰 Estimated Cleaning Quote: $${data.quote.total}</h3>
+                        <p><em>Base rate: $${data.quote.baseRate} + $${data.quote.additionalCharges} for size/rooms</em></p>
+                        <p><small>*Final quote may vary based on specific cleaning requirements</small></p>
+                    `;
+                } else {
+                    throw new Error(data.error || 'Failed to get quote');
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultContent.innerHTML = `
+                    <h3>❌ Error</h3>
+                    <p>${error.message}</p>
+                    <p><small>Please check the address and try again.</small></p>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
